@@ -1,463 +1,1504 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, Check, Wallet, Gift, TrendingUp, Users, Timer } from 'lucide-react';
-
-export default function JercatAirdrop() {
-  const [account, setAccount] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [twitterHandle, setTwitterHandle] = useState('');
-  const [telegramHandle, setTelegramHandle] = useState('');
-  const [purchaseAmount, setPurchaseAmount] = useState(0);
-  const [participants, setParticipants] = useState(247);
-  const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const CONTRACT_ADDRESS = '0x197CF8951d93325A9333857Ee5330daF7aC4bcCF';
-  const MIN_PURCHASE = 9; // 9 USDT minimum
-
-  // Simulation du timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        if (prev.days > 0) return { days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        return prev;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Connexion Wallet
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        
-        // Vérifier BSC (chainId 56)
-        if (chainId !== '0x38') {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0x38' }],
-            });
-          } catch (switchError) {
-            if (switchError.code === 4902) {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                  chainId: '0x38',
-                  chainName: 'Binance Smart Chain',
-                  nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                  rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                  blockExplorerUrls: ['https://bscscan.com/']
-                }]
-              });
-            }
-          }
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JERCAT MEGA AIRDROP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        setAccount(accounts[0]);
-        setIsConnected(true);
-        setCurrentStep(2);
-      } catch (error) {
-        setErrorMsg('Erreur de connexion au wallet');
-      }
-    } else {
-      setErrorMsg('MetaMask non détecté. Veuillez installer MetaMask.');
-    }
-  };
 
-  // Vérifier l'achat
-  const verifyPurchase = async () => {
-    if (!account) return;
-    
-    setErrorMsg('');
-    
-    // Simulation de vérification (dans la vraie app, on vérifierait via Web3)
-    setTimeout(() => {
-      const amount = Math.random() * 20 + 5; // Simule un montant entre 5 et 25 USDT
-      setPurchaseAmount(amount);
-      
-      if (amount >= MIN_PURCHASE) {
-        setHasPurchased(true);
-        setCurrentStep(3);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-      } else {
-        setErrorMsg(`Vous devez acheter au moins ${MIN_PURCHASE} USDT de JERCAT pour participer.`);
-      }
-    }, 2000);
-  };
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #581c87 0%, #1e3a8a 50%, #312e81 100%);
+            min-height: 100vh;
+        }
 
-  // Inscription finale
-  const registerForAirdrop = () => {
-    if (!twitterHandle || !telegramHandle) {
-      setErrorMsg('Veuillez remplir tous les champs.');
-      return;
-    }
-    
-    if (!twitterHandle.startsWith('@')) {
-      setErrorMsg('Le Twitter handle doit commencer par @');
-      return;
-    }
-    
-    setErrorMsg('');
-    setIsRegistered(true);
-    setParticipants(prev => prev + 1);
-    setCurrentStep(4);
-  };
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🐱</div>
-          <h1 className="text-5xl font-bold text-white mb-2">JERCAT MEGA AIRDROP</h1>
-          <p className="text-xl text-purple-200">Buy 9 USDT & Get a Chance to Win</p>
-          <div className="inline-block bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-bold text-sm mt-3">
-            🔥 100 WINNERS - Better Odds!
-          </div>
-        </div>
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
 
-        {/* Timer */}
-        <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl p-6 mb-8 text-center shadow-2xl">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Timer className="text-white" size={24} />
-            <h2 className="text-2xl font-bold text-white">Airdrop Ends In</h2>
-          </div>
-          <div className="flex justify-center gap-4">
-            {[
-              { label: 'Days', value: timeLeft.days },
-              { label: 'Hours', value: timeLeft.hours },
-              { label: 'Minutes', value: timeLeft.minutes },
-              { label: 'Seconds', value: timeLeft.seconds }
-            ].map((item, idx) => (
-              <div key={idx} className="bg-white/20 backdrop-blur rounded-xl p-3 min-w-[70px]">
-                <div className="text-3xl font-bold text-white">{String(item.value).padStart(2, '0')}</div>
-                <div className="text-xs text-white/80">{item.label}</div>
-              </div>
-            ))}
-          </div>
-          <p className="text-white/90 text-sm mt-3">Draw on December 18, 2025</p>
-        </div>
+        .header-emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-            <Gift className="mx-auto text-yellow-400 mb-2" size={32} />
-            <div className="text-2xl font-bold text-white">2M JERCAT</div>
-            <div className="text-sm text-purple-200">Total Prize Pool</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-            <Users className="mx-auto text-green-400 mb-2" size={32} />
-            <div className="text-2xl font-bold text-white">{participants}</div>
-            <div className="text-sm text-purple-200">Participants</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-            <TrendingUp className="mx-auto text-blue-400 mb-2" size={32} />
-            <div className="text-2xl font-bold text-white">100</div>
-            <div className="text-sm text-purple-200">Winners</div>
-          </div>
-        </div>
+        .header h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
 
-        {/* Main Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6">
-          {/* Progress Steps */}
-          <div className="flex justify-between mb-8">
-            {[
-              { num: 1, label: 'Connect' },
-              { num: 2, label: 'Purchase' },
-              { num: 3, label: 'Register' },
-              { num: 4, label: 'Done' }
-            ].map((step, idx) => (
-              <div key={idx} className="flex flex-col items-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold mb-2 ${
-                  currentStep > step.num ? 'bg-green-500 text-white' :
-                  currentStep === step.num ? 'bg-purple-600 text-white' :
-                  'bg-gray-200 text-gray-500'
-                }`}>
-                  {currentStep > step.num ? <Check size={20} /> : step.num}
-                </div>
-                <div className={`text-xs font-semibold ${currentStep >= step.num ? 'text-purple-600' : 'text-gray-400'}`}>
-                  {step.label}
-                </div>
-                {idx < 3 && (
-                  <div className={`h-1 w-full absolute top-5 left-1/2 -z-10 ${
-                    currentStep > step.num ? 'bg-green-500' : 'bg-gray-200'
-                  }`} style={{ transform: 'translateX(50%)' }} />
-                )}
-              </div>
-            ))}
-          </div>
+        .header-subtitle {
+            font-size: 1.25rem;
+            color: #e9d5ff;
+        }
 
-          {/* Error Message */}
-          {errorMsg && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-              <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
-              <p className="text-red-700 text-sm">{errorMsg}</p>
-            </div>
-          )}
+        .badge {
+            display: inline-block;
+            background: #facc15;
+            color: #1f2937;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+        }
 
-          {/* Success Message */}
-          {showSuccess && (
-            <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
-              <Check className="text-green-500 flex-shrink-0 mt-0.5" size={20} />
-              <p className="text-green-700 text-sm">Vérification réussie ! Vous pouvez continuer.</p>
-            </div>
-          )}
+        /* Admin Toggle */
+        .admin-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
 
-          {/* STEP 1: Connect Wallet */}
-          {!isConnected && (
-            <div className="text-center py-8">
-              <Wallet className="mx-auto text-purple-600 mb-4" size={64} />
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">Connect Your Wallet</h2>
-              <p className="text-gray-600 mb-6">Connect your MetaMask wallet to participate in the airdrop</p>
-              <button
-                onClick={connectWallet}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition"
-              >
-                Connect MetaMask
-              </button>
-              <p className="text-xs text-gray-500 mt-4">Make sure you're on Binance Smart Chain (BSC)</p>
-            </div>
-          )}
+        .admin-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 2px solid #6366f1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
 
-          {/* STEP 2: Verify Purchase */}
-          {isConnected && !hasPurchased && (
-            <div className="py-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">Purchase Requirement</h2>
-              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-6 mb-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="text-yellow-600 flex-shrink-0 mt-1" size={24} />
-                  <div>
-                    <h3 className="font-bold text-yellow-900 mb-2">Minimum Purchase Required</h3>
-                    <p className="text-yellow-800 mb-3">
-                      To participate in this airdrop, you must purchase at least <strong>9 USDT</strong> worth of JERCAT tokens.
-                    </p>
-                    <div className="bg-white/70 rounded-lg p-3 mb-3">
-                      <p className="text-sm text-gray-700">
-                        <strong>Connected Wallet:</strong><br />
-                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">{account.slice(0, 6)}...{account.slice(-4)}</code>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        .admin-btn:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
 
-              <div className="space-y-4">
-                <a
-                  href={`https://pancakeswap.finance/swap?outputCurrency=${CONTRACT_ADDRESS}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-4 rounded-xl font-bold text-center hover:shadow-lg transform hover:scale-105 transition"
-                >
-                  Buy JERCAT on PancakeSwap →
-                </a>
-                
-                <button
-                  onClick={verifyPurchase}
-                  className="w-full bg-purple-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-purple-700 transition"
-                >
-                  Verify My Purchase
-                </button>
-              </div>
+        /* Timer */
+        .timer-card {
+            background: linear-gradient(to right, #ec4899, #f43f5e);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
 
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
-                  After purchasing, click "Verify My Purchase" to check your eligibility
-                </p>
-              </div>
-            </div>
-          )}
+        .timer-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
 
-          {/* STEP 3: Registration Form */}
-          {isConnected && hasPurchased && !isRegistered && (
-            <div className="py-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">Complete Registration</h2>
-              
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Check className="text-green-600" size={20} />
-                  <span className="font-bold text-green-800">Purchase Verified!</span>
-                </div>
-                <p className="text-sm text-green-700">
-                  You purchased <strong>{purchaseAmount.toFixed(2)} USDT</strong> worth of JERCAT ✅
-                </p>
-              </div>
+        .timer-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Twitter Handle *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="@YourTwitterHandle"
-                    value={twitterHandle}
-                    onChange={(e) => setTwitterHandle(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
-                  />
-                </div>
+        .timer-box {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            min-width: 70px;
+        }
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Telegram Username *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="@YourTelegramUsername"
-                    value={telegramHandle}
-                    onChange={(e) => setTelegramHandle(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
-                  />
-                </div>
+        .timer-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+        }
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                    <Gift size={18} />
-                    Bonus Tasks (Optional)
-                  </h3>
-                  <div className="space-y-2 text-sm text-blue-800">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded" />
-                      Follow @JERCAT on Twitter (+1 extra entry)
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded" />
-                      Retweet our pinned post (+1 extra entry)
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded" />
-                      Join Telegram group (+1 extra entry)
-                    </label>
-                  </div>
-                </div>
+        .timer-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
 
-                <button
-                  onClick={registerForAirdrop}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition"
-                >
-                  Complete Registration 🎉
-                </button>
-              </div>
-            </div>
-          )}
+        .timer-date {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+        }
 
-          {/* STEP 4: Success */}
-          {isRegistered && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Check className="text-white" size={48} />
-              </div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-3">Registration Complete! 🎉</h2>
-              <p className="text-lg text-gray-600 mb-6">
-                You're now officially entered into the JERCAT airdrop!
-              </p>
-              
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 mb-6 text-left max-w-md mx-auto">
-                <h3 className="font-bold text-gray-800 mb-3">Your Entry Details:</h3>
-                <div className="space-y-2 text-sm">
-                  <p><strong>Wallet:</strong> {account.slice(0, 10)}...{account.slice(-8)}</p>
-                  <p><strong>Twitter:</strong> {twitterHandle}</p>
-                  <p><strong>Telegram:</strong> {telegramHandle}</p>
-                  <p><strong>Purchase Amount:</strong> {purchaseAmount.toFixed(2)} USDT</p>
-                  <p><strong>Entry Number:</strong> #{participants}</p>
-                </div>
-              </div>
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
 
-              <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-6 max-w-md mx-auto">
-                <p className="text-sm text-yellow-800">
-                  <strong>What's Next?</strong><br />
-                  The draw will take place on <strong>December 18, 2025</strong> (in {timeLeft.days} days). 
-                  100 lucky winners will be selected randomly and contacted via Twitter DM!
-                </p>
-              </div>
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
 
-              <button
-                onClick={() => window.open(`https://twitter.com/intent/tweet?text=Just entered the @JERCAT MEGA airdrop! 2M JERCAT for 100 winners! 🐱💎 Better odds! %23JERCAT %23Airdrop`, '_blank')}
-                className="bg-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600 transition"
-              >
-                Share on Twitter 🐦
-              </button>
-            </div>
-          )}
-        </div>
+        .stat-icon {
+            margin: 0 auto 0.5rem;
+            font-size: 2rem;
+        }
 
-        {/* Info Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-3">📋 How to Participate</h3>
-            <ol className="space-y-2 text-purple-100 text-sm">
-              <li>1. Connect your BSC wallet</li>
-              <li>2. Purchase minimum 9 USDT of JERCAT</li>
-              <li>3. Complete registration form</li>
-              <li>4. Wait 30 days for the draw!</li>
-            </ol>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-3">🏆 Prize Distribution</h3>
-            <div className="space-y-2 text-purple-100 text-sm">
-              <div className="flex justify-between">
-                <span>🥇 Top 10 Winners:</span>
-                <span className="font-bold">50,000 JERCAT each</span>
-              </div>
-              <div className="flex justify-between">
-                <span>🥈 Next 20 Winners:</span>
-                <span className="font-bold">30,000 JERCAT each</span>
-              </div>
-              <div className="flex justify-between">
-                <span>🥉 Next 70 Winners:</span>
-                <span className="font-bold">10,000 JERCAT each</span>
-              </div>
-              <div className="border-t border-white/20 pt-2 mt-2 flex justify-between font-bold">
-                <span>Total Pool:</span>
-                <span className="text-yellow-300">2,000,000 JERCAT</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
 
-        {/* Why Better Odds */}
-        <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur rounded-2xl p-6 mb-6 border border-green-400/30">
-          <h3 className="text-2xl font-bold text-white mb-3 text-center">✨ Why This Airdrop is Better</h3>
-          <div className="grid md:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-4xl font-bold text-green-300">100</div>
-              <div className="text-sm text-white">Winners Selected</div>
-              <div className="text-xs text-green-200 mt-1">More chances to win!</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-green-300">30</div>
-              <div className="text-sm text-white">Days to Enter</div>
-              <div className="text-xs text-green-200 mt-1">No rush, take your time!</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-green-300">9 USDT</div>
-              <div className="text-sm text-white">Minimum Buy</div>
-              <div className="text-xs text-green-200 mt-1">Low entry barrier!</div>
-            </div>
-          </div>
-        </div>
+        .stat-label {
+            font-size: 0.875rem;
+            color: #e9d5ff;
+        }
 
-        {/* Contract Info */}
-        <div className="bg-white/5 backdrop-blur rounded-xl p-4 text-center">
-          <p className="text-purple-200 text-xs mb-2">JERCAT Contract Address (BSC)</p>
-          <code className="text-white text-xs bg-black/30 px-3 py-2 rounded break-all">
-            {CONTRACT_ADDRESS}
-          </code>
-          <p className="text-purple-300 text-xs mt-3">
-            ⏰ Draw Date: December 18, 2025 | 🎁 100 Lucky Winners
-          </p>
-        </div>
-      </div>
+        /* Main Card */
+        .main-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Progress Steps */
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            z-index: 1;
+        }
+
+        .step-circle.completed {
+            background: #22c55e;
+            color: white;
+        }
+
+        .step-circle.active {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .step-circle.inactive {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .step-label.active {
+            color: #7c3aed;
+        }
+
+        .step-label.inactive {
+            color: #9ca3af;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #15803d;
+        }
+
+        .alert-warning {
+            background: #fffbeb;
+            border: 2px solid #fcd34d;
+            color: #92400e;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            font-size: 1.125rem;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #7c3aed, #2563eb);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .btn-pink {
+            background: linear-gradient(to right, #ec4899, #f43f5e);
+            color: white;
+        }
+
+        .btn-blue {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        /* Form Inputs */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box-warning {
+            background: linear-gradient(to right, #fffbeb, #ffedd5);
+            border: 2px solid #fcd34d;
+        }
+
+        .info-box-success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+
+        .info-box-blue {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* Content Sections */
+        .content-section {
+            padding: 2rem 0;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 96px;
+            height: 96px;
+            background: linear-gradient(to right, #4ade80, #10b981);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* Info Cards Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .info-card h3 {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .info-card ol {
+            list-style: none;
+            color: #e9d5ff;
+            font-size: 0.875rem;
+        }
+
+        .info-card ol li {
+            margin-bottom: 0.5rem;
+        }
+
+        .prize-row {
+            display: flex;
+            justify-content: space-between;
+            color: #e9d5ff;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .prize-row.total {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
+
+        /* Better Odds Section */
+        .better-odds {
+            background: linear-gradient(to right, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .better-odds h3 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .odds-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .odds-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #86efac;
+        }
+
+        .odds-label {
+            font-size: 0.875rem;
+            color: white;
+        }
+
+        .odds-sublabel {
+            font-size: 0.75rem;
+            color: #bbf7d0;
+            margin-top: 0.25rem;
+        }
+
+        /* Contract Info */
+        .contract-info {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .contract-label {
+            color: #e9d5ff;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contract-address {
+            color: white;
+            font-size: 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.25rem;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        .contract-date {
+            color: #d8b4fe;
+            font-size: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Admin Panel Styles */
+        .admin-panel {
+            background: #1e293b;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid #6366f1;
+        }
+
+        .admin-panel h2 {
+            color: white;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .participants-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: #0f172a;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .participants-table th {
+            background: #1e293b;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #e2e8f0;
+            border-bottom: 2px solid #334155;
+        }
+
+        .participants-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            color: #cbd5e1;
+        }
+
+        .participants-table tr:hover {
+            background: #1e293b;
+        }
+
+        .badge-admin {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-verified {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge-pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .badge-winner {
+            background: #fbbf24;
+            color: #1f2937;
+        }
+
+        code {
+            background: #0f172a;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #334155;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .odds-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-toggle {
+                top: 10px;
+                right: 10px;
+            }
+
+            .admin-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Toggle -->
+    <div class="admin-toggle">
+        <button class="admin-btn" onclick="toggleAdminPanel()">👑 Admin Panel</button>
     </div>
-  );
-}
+
+    <div class="container">
+        <!-- Admin Panel (Hidden by default) -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <h2>👑 Panneau d'Administration</h2>
+            
+            <div class="stats-grid" style="margin-bottom: 2rem;">
+                <div class="stat-card" style="background: #0f172a;">
+                    <div class="stat-label">Total Inscrits</div>
+                    <div class="stat-value" id="adminTotalParticipants">0</div>
+                </div>
+                <div class="stat-card" style="background: #0f172a;">
+                    <div class="stat-label">Achats Vérifiés</div>
+                    <div class="stat-value" id="adminVerifiedPurchases">0</div>
+                </div>
+                <div class="stat-card" style="background: #0f172a;">
+                    <div class="stat-label">Gagnants</div>
+                    <div class="stat-value" id="adminWinners">0</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" style="color: #e2e8f0;">Montant Minimum (USDT)</label>
+                <input type="number" class="form-input" id="adminMinPurchase" value="9" min="1">
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                <button class="btn btn-primary" onclick="verifyAllParticipants()" style="flex: 1;">
+                    🔍 Vérifier Tous les Achats
+                </button>
+                <button class="btn btn-success" onclick="selectWinners()" id="selectWinnersBtn" style="flex: 1;">
+                    🎉 Sélectionner 100 Gagnants
+                </button>
+            </div>
+
+            <div id="verificationProgress" class="hidden" style="margin-bottom: 2rem;">
+                <div style="background: #0f172a; border-radius: 0.5rem; height: 40px; overflow: hidden;">
+                    <div id="progressBar" style="height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">0%</div>
+                </div>
+                <p id="progressText" style="color: #94a3b8; margin-top: 0.5rem; text-align: center;">Initialisation...</p>
+            </div>
+
+            <div style="max-height: 500px; overflow-y: auto; border-radius: 0.5rem;">
+                <table class="participants-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Wallet</th>
+                            <th>Email</th>
+                            <th>Montant</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminParticipantsTable">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">
+                                Aucun participant enregistré
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="winnersSection" class="hidden" style="margin-top: 2rem;">
+                <h3 style="color: white; margin-bottom: 1rem;">🏆 Gagnants Sélectionnés</h3>
+                <div id="winnersList" style="background: #0f172a; border-radius: 0.5rem; padding: 1rem; max-height: 400px; overflow-y: auto;">
+                </div>
+                <button class="btn btn-primary" onclick="sendWinnersEmails()" style="margin-top: 1rem;">
+                    📧 Envoyer Emails aux Gagnants
+                </button>
+            </div>
+        </div>
+
+        <!-- Public Interface -->
+        <div id="publicInterface">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-emoji">🐱</div>
+                <h1>JERCAT MEGA AIRDROP</h1>
+                <p class="header-subtitle">Buy 9 USDT & Get a Chance to Win</p>
+                <div class="badge">🔥 100 WINNERS - Better Odds!</div>
+            </div>
+
+            <!-- Timer -->
+            <div class="timer-card">
+                <div class="timer-title">
+                    <span>⏰</span>
+                    <h2>Airdrop Ends In</h2>
+                </div>
+                <div class="timer-boxes">
+                    <div class="timer-box">
+                        <div class="timer-value" id="days">30</div>
+                        <div class="timer-label">Days</div>
+                    </div>
+                    <div class="timer-box">
+                        <div class="timer-value" id="hours">00</div>
+                        <div class="timer-label">Hours</div>
+                    </div>
+                    <div class="timer-box">
+                        <div class="timer-value" id="minutes">00</div>
+                        <div class="timer-label">Minutes</div>
+                    </div>
+                    <div class="timer-box">
+                        <div class="timer-value" id="seconds">00</div>
+                        <div class="timer-label">Seconds</div>
+                    </div>
+                </div>
+                <p class="timer-date">Draw on December 18, 2025</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🎁</div>
+                    <div class="stat-value">2M JERCAT</div>
+                    <div class="stat-label">Total Prize Pool</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="participants">0</div>
+                    <div class="stat-label">Participants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">100</div>
+                    <div class="stat-label">Winners</div>
+                </div>
+            </div>
+
+            <!-- Main Card -->
+            <div class="main-card">
+                <!-- Progress Steps -->
+                <div class="steps-container">
+                    <div class="step">
+                        <div class="step-circle active" id="step1-circle">1</div>
+                        <div class="step-label active" id="step1-label">Connect</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle inactive" id="step2-circle">2</div>
+                        <div class="step-label inactive" id="step2-label">Purchase</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle inactive" id="step3-circle">3</div>
+                        <div class="step-label inactive" id="step3-label">Register</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle inactive" id="step4-circle">4</div>
+                        <div class="step-label inactive" id="step4-label">Done</div>
+                    </div>
+                </div>
+
+                <!-- Alert Messages -->
+                <div id="errorAlert" class="alert alert-error hidden">
+                    <span>⚠️</span>
+                    <p id="errorMessage"></p>
+                </div>
+
+                <div id="successAlert" class="alert alert-success hidden">
+                    <span>✅</span>
+                    <p id="successMessage">Vérification réussie ! Vous pouvez continuer.</p>
+                </div>
+
+                <!-- Step 1: Connect Wallet -->
+                <div id="step1" class="content-section text-center">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">💼</div>
+                    <h2 style="font-size: 1.5rem; font-weight: bold; color: #1f2937; margin-bottom: 0.75rem;">Connect Your Wallet</h2>
+                    <p style="color: #6b7280; margin-bottom: 1.5rem;">Connect your MetaMask wallet to participate in the airdrop</p>
+                    <button class="btn btn-primary" onclick="connectWallet()">Connect MetaMask</button>
+                    <p style="font-size: 0.75rem; color: #6b7280; margin-top: 1rem;">Make sure you're on Binance Smart Chain (BSC)</p>
+                </div>
+
+                <!-- Step 2: Verify Purchase -->
+                <div id="step2" class="content-section hidden">
+                    <h2 style="font-size: 1.5rem; font-weight: bold; color: #1f2937; margin-bottom: 0.75rem;">Purchase Requirement</h2>
+                    
+                    <div class="info-box info-box-warning">
+                        <div style="display: flex; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">⚠️</span>
+                            <div>
+                                <h3 style="font-weight: bold; color: #78350f; margin-bottom: 0.5rem;">Minimum Purchase Required</h3>
+                                <p style="color: #92400e; margin-bottom: 0.75rem;">
+                                    To participate in this airdrop, you must purchase at least <strong>9 USDT</strong> worth of JERCAT tokens.
+                                </p>
+                                <div style="background: rgba(255,255,255,0.7); border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem;">
+                                    <p style="font-size: 0.875rem; color: #374151;">
+                                        <strong>Connected Wallet:</strong><br>
+                                        <code id="walletAddress"></code>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <a href="https://pancakeswap.finance/swap?outputCurrency=0x197CF8951d93325A9333857Ee5330daF7aC4bcCF" 
+                           target="_blank" 
+                           class="btn btn-pink" 
+                           style="display: block; text-decoration: none; margin-bottom: 1rem;">
+                            Buy JERCAT on PancakeSwap →
+                        </a>
+                        
+                        <button class="btn btn-secondary" onclick="verifyPurchase()">
+                            <span id="verifyBtnText">Verify My Purchase</span>
+                            <span id="verifyBtnLoader" class="loading hidden" style="margin-left: 0.5rem;"></span>
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p style="font-size: 0.875rem; color: #6b7280;">
+                            After purchasing, click "Verify My Purchase" to check your eligibility
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3: Registration Form -->
+                <div id="step3" class="content-section hidden">
+                    <h2 style="font-size: 1.5rem; font-weight: bold; color: #1f2937; margin-bottom: 0.75rem;">Complete Registration</h2>
+                    
+                    <div class="info-box info-box-success">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span>✅</span>
+                            <span style="font-weight: bold; color: #166534;">Purchase Verified!</span>
+                        </div>
+                        <p style="font-size: 0.875rem; color: #15803d;">
+                            You purchased <strong><span id="purchaseAmount">0.00</span> USDT</strong> worth of JERCAT ✅
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" id="emailAddress" class="form-input" placeholder="your.email@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Twitter Handle *</label>
+                        <input type="text" id="twitterHandle" class="form-input" placeholder="@YourTwitterHandle">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Telegram Username *</label>
+                        <input type="text" id="telegramHandle" class="form-input" placeholder="@YourTelegramUsername">
+                    </div>
+
+                    <div class="info-box info-box-blue">
+                        <h3 style="font-weight: bold; color: #1e3a8a; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🎁</span>
+                            Bonus Tasks (Optional)
+                        </h3>
+                        <div style="color: #1e40af; font-size: 0.875rem;">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="bonus1">
+                                <label for="bonus1">Follow @JERCAT on Twitter (+1 extra entry)</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="bonus2">
+                                <label for="bonus2">Retweet our pinned post (+1 extra entry)</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="bonus3">
+                                <label for="bonus3">Join Telegram group (+1 extra entry)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="registerForAirdrop()">
+                        Complete Registration 🎉
+                    </button>
+                </div>
+
+                <!-- Step 4: Success -->
+                <div id="step4" class="content-section text-center hidden">
+                    <div class="success-icon">
+                        <span style="font-size: 3rem; color: white;">✅</span>
+                    </div>
+                    <h2 style="font-size: 2rem; font-weight: bold; color: #1f2937; margin-bottom: 0.75rem;">Registration Complete! 🎉</h2>
+                    <p style="font-size: 1.125rem; color: #6b7280; margin-bottom: 1.5rem;">
+                        You're now officially entered into the JERCAT airdrop!
+                    </p>
+                    
+                    <div style="background: linear-gradient(to right, #faf5ff, #eff6ff); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; text-align: left; max-width: 28rem; margin-left: auto; margin-right: auto;">
+                        <h3 style="font-weight: bold; color: #1f2937; margin-bottom: 0.75rem;">Your Entry Details:</h3>
+                        <div style="font-size: 0.875rem;">
+                            <p style="margin-bottom: 0.5rem;"><strong>Wallet:</strong> <span id="finalWallet"></span></p>
+                            <p style="margin-bottom: 0.5rem;"><strong>Email:</strong> <span id="finalEmail"></span></p>
+                            <p style="margin-bottom: 0.5rem;"><strong>Twitter:</strong> <span id="finalTwitter"></span></p>
+                            <p style="margin-bottom: 0.5rem;"><strong>Telegram:</strong> <span id="finalTelegram"></span></p>
+                            <p style="margin-bottom: 0.5rem;"><strong>Purchase Amount:</strong> <span id="finalAmount"></span> USDT</p>
+                            <p><strong>Entry Number:</strong> #<span id="finalEntry"></span></p>
+                        </div>
+                    </div>
+
+                    <div style="background: #fffbeb; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; max-width: 28rem; margin-left: auto; margin-right: auto;">
+                        <p style="font-size: 0.875rem; color: #92400e;">
+                            <strong>What's Next?</strong><br>
+                            The draw will take place on <strong>December 18, 2025</strong> (in <span id="daysLeft"></span> days). 
+                            100 lucky winners will be selected randomly and contacted via email!
+                        </p>
+                    </div>
+
+                    <button class="btn btn-blue" onclick="shareOnTwitter()">
+                        Share on Twitter 🐦
+                    </button>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>📋 How to Participate</h3>
+                    <ol>
+                        <li>1. Connect your BSC wallet</li>
+                        <li>2. Purchase minimum 9 USDT of JERCAT</li>
+                        <li>3. Complete registration form</li>
+                        <li>4. Wait 30 days for the draw!</li>
+                    </ol>
+                </div>
+                
+                <div class="info-card">
+                    <h3>🏆 Prize Distribution</h3>
+                    <div class="prize-row">
+                        <span>🥇 Top 10 Winners:</span>
+                        <span style="font-weight: bold;">50,000 JERCAT each</span>
+                    </div>
+                    <div class="prize-row">
+                        <span>🥈 Next 20 Winners:</span>
+                        <span style="font-weight: bold;">30,000 JERCAT each</span>
+                    </div>
+                    <div class="prize-row">
+                        <span>🥉 Next 70 Winners:</span>
+                        <span style="font-weight: bold;">10,000 JERCAT each</span>
+                    </div>
+                    <div class="prize-row total">
+                        <span>Total Pool:</span>
+                        <span style="color: #fcd34d;">2,000,000 JERCAT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Why Better Odds -->
+            <div class="better-odds">
+                <h3>✨ Why This Airdrop is Better</h3>
+                <div class="odds-grid">
+                    <div>
+                        <div class="odds-value">100</div>
+                        <div class="odds-label">Winners Selected</div>
+                        <div class="odds-sublabel">More chances to win!</div>
+                    </div>
+                    <div>
+                        <div class="odds-value">30</div>
+                        <div class="odds-label">Days to Enter</div>
+                        <div class="odds-sublabel">No rush, take your time!</div>
+                    </div>
+                    <div>
+                        <div class="odds-value">9 USDT</div>
+                        <div class="odds-label">Minimum Buy</div>
+                        <div class="odds-sublabel">Low entry barrier!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Info -->
+            <div class="contract-info">
+                <p class="contract-label">JERCAT Contract Address (BSC)</p>
+                <code class="contract-address">0x197CF8951d93325A9333857Ee5330daF7aC4bcCF</code>
+                <p class="contract-date">⏰ Draw Date: December 18, 2025 | 🎁 100 Lucky Winners</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+    <script>
+        // Configuration EmailJS
+        emailjs.init("YOUR_EMAILJS_USER_ID"); // À remplacer par votre User ID EmailJS
+
+        // Variables globales
+        const CONTRACT_ADDRESS = '0x197CF8951d93325A9333857Ee5330daF7aC4bcCF';
+        const PANCAKESWAP_ROUTER = '0x10ED43C718714eb63d5aA57B78B54704E256024E';
+        const MIN_PURCHASE = 9;
+
+        let account = '';
+        let web3;
+        let currentStep = 1;
+        let purchaseAmount = 0;
+        
+        // Base de données locale (localStorage)
+        let participants = JSON.parse(localStorage.getItem('jercatParticipants')) || [];
+        let winners = JSON.parse(localStorage.getItem('jercatWinners')) || [];
+
+        // Timer countdown
+        let timeLeft = {
+            days: 30,
+            hours: 0,
+            minutes: 0,
+            seconds: 0
+        };
+
+        function updateTimer() {
+            if (timeLeft.seconds > 0) {
+                timeLeft.seconds--;
+            } else if (timeLeft.minutes > 0) {
+                timeLeft.minutes--;
+                timeLeft.seconds = 59;
+            } else if (timeLeft.hours > 0) {
+                timeLeft.hours--;
+                timeLeft.minutes = 59;
+                timeLeft.seconds = 59;
+            } else if (timeLeft.days > 0) {
+                timeLeft.days--;
+                timeLeft.hours = 23;
+                timeLeft.minutes = 59;
+                timeLeft.seconds = 59;
+            }
+
+            document.getElementById('days').textContent = String(timeLeft.days).padStart(2, '0');
+            document.getElementById('hours').textContent = String(timeLeft.hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(timeLeft.minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(timeLeft.seconds).padStart(2, '0');
+        }
+
+        setInterval(updateTimer, 1000);
+
+        // Update participants count
+        function updateParticipantsCount() {
+            document.getElementById('participants').textContent = participants.length;
+            document.getElementById('adminTotalParticipants').textContent = participants.length;
+            
+            const verified = participants.filter(p => p.verified).length;
+            document.getElementById('adminVerifiedPurchases').textContent = verified;
+            document.getElementById('adminWinners').textContent = winners.length;
+        }
+
+        updateParticipantsCount();
+
+        // Fonctions utilitaires
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorAlert').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('errorAlert').classList.add('hidden');
+            }, 5000);
+        }
+
+        function showSuccess(message = 'Vérification réussie ! Vous pouvez continuer.') {
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successAlert').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('successAlert').classList.add('hidden');
+            }, 3000);
+        }
+
+        function updateSteps(step) {
+            for (let i = 1; i <= 4; i++) {
+                const circle = document.getElementById(`step${i}-circle`);
+                const label = document.getElementById(`step${i}-label`);
+                
+                if (i < step) {
+                    circle.className = 'step-circle completed';
+                    circle.textContent = '✓';
+                    label.className = 'step-label active';
+                } else if (i === step) {
+                    circle.className = 'step-circle active';
+                    circle.textContent = i;
+                    label.className = 'step-label active';
+                } else {
+                    circle.className = 'step-circle inactive';
+                    circle.textContent = i;
+                    label.className = 'step-label inactive';
+                }
+            }
+
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`step${i}`).classList.add('hidden');
+            }
+            
+            document.getElementById(`step${step}`).classList.remove('hidden');
+        }
+
+        // Connexion Wallet
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    web3 = new Web3(window.ethereum);
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    
+                    if (chainId !== '0x38') {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: '0x38' }],
+                            });
+                        } catch (switchError) {
+                            if (switchError.code === 4902) {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x38',
+                                        chainName: 'Binance Smart Chain',
+                                        nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                                        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                                        blockExplorerUrls: ['https://bscscan.com/']
+                                    }]
+                                });
+                            }
+                        }
+                    }
+                    
+                    account = accounts[0];
+                    currentStep = 2;
+                    
+                    document.getElementById('walletAddress').textContent = 
+                        account.slice(0, 6) + '...' + account.slice(-4);
+                    
+                    updateSteps(2);
+                } catch (error) {
+                    showError('Erreur de connexion au wallet');
+                }
+            } else {
+                showError('MetaMask non détecté. Veuillez installer MetaMask.');
+            }
+        }
+
+        // Vérifier l'achat via Web3
+        async function verifyPurchase() {
+            if (!account) return;
+            
+            document.getElementById('verifyBtnText').classList.add('hidden');
+            document.getElementById('verifyBtnLoader').classList.remove('hidden');
+
+            try {
+                const tokenABI = [
+                    {
+                        "constant": true,
+                        "inputs": [{"name": "_owner", "type": "address"}],
+                        "name": "balanceOf",
+                        "outputs": [{"name": "balance", "type": "uint256"}],
+                        "type": "function"
+                    }
+                ];
+
+                const tokenContract = new web3.eth.Contract(tokenABI, CONTRACT_ADDRESS);
+                const balance = await tokenContract.methods.balanceOf(account).call();
+                const balanceInTokens = parseFloat(web3.utils.fromWei(balance, 'ether'));
+
+                // Estimation approximative (à ajuster selon le prix réel)
+                const estimatedUSDT = balanceInTokens * 0.001; // Exemple: 1 JERCAT = 0.001 USDT
+                
+                purchaseAmount = estimatedUSDT;
+
+                if (estimatedUSDT >= MIN_PURCHASE) {
+                    document.getElementById('purchaseAmount').textContent = estimatedUSDT.toFixed(2);
+                    currentStep = 3;
+                    showSuccess();
+                    updateSteps(3);
+                } else {
+                    showError(`Vous devez acheter au moins ${MIN_PURCHASE} USDT de JERCAT pour participer. Votre solde: ${estimatedUSDT.toFixed(2)} USDT`);
+                }
+            } catch (error) {
+                console.error('Erreur de vérification:', error);
+                showError('Erreur lors de la vérification. Veuillez réessayer.');
+            } finally {
+                document.getElementById('verifyBtnText').classList.remove('hidden');
+                document.getElementById('verifyBtnLoader').classList.add('hidden');
+            }
+        }
+
+        // Inscription finale
+        function registerForAirdrop() {
+            const email = document.getElementById('emailAddress').value;
+            const twitter = document.getElementById('twitterHandle').value;
+            const telegram = document.getElementById('telegramHandle').value;
+            
+            if (!email || !twitter || !telegram) {
+                showError('Veuillez remplir tous les champs obligatoires.');
+                return;
+            }
+
+            if (!email.includes('@')) {
+                showError('Veuillez entrer une adresse email valide.');
+                return;
+            }
+            
+            if (!twitter.startsWith('@')) {
+                showError('Le Twitter handle doit commencer par @');
+                return;
+            }
+
+            // Vérifier si le wallet est déjà enregistré
+            const existingParticipant = participants.find(p => p.wallet.toLowerCase() === account.toLowerCase());
+            if (existingParticipant) {
+                showError('Ce wallet est déjà enregistré pour l\'airdrop.');
+                return;
+            }
+
+            const participant = {
+                wallet: account,
+                email: email,
+                twitter: twitter,
+                telegram: telegram,
+                purchaseAmount: purchaseAmount,
+                registeredAt: new Date().toISOString(),
+                verified: true,
+                isWinner: false
+            };
+
+            participants.push(participant);
+            localStorage.setItem('jercatParticipants', JSON.stringify(participants));
+            
+            currentStep = 4;
+            
+            document.getElementById('finalWallet').textContent = account.slice(0, 10) + '...' + account.slice(-8);
+            document.getElementById('finalEmail').textContent = email;
+            document.getElementById('finalTwitter').textContent = twitter;
+            document.getElementById('finalTelegram').textContent = telegram;
+            document.getElementById('finalAmount').textContent = purchaseAmount.toFixed(2);
+            document.getElementById('finalEntry').textContent = participants.length;
+            document.getElementById('daysLeft').textContent = timeLeft.days;
+            
+            updateParticipantsCount();
+            updateSteps(4);
+
+            // Envoyer email de confirmation
+            sendConfirmationEmail(participant);
+        }
+
+        // Envoyer email de confirmation
+        function sendConfirmationEmail(participant) {
+            const templateParams = {
+                to_email: participant.email,
+                to_name: participant.twitter,
+                wallet_address: participant.wallet,
+                purchase_amount: participant.purchaseAmount.toFixed(2),
+                entry_number: participants.length,
+                draw_date: 'December 18, 2025'
+            };
+
+            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+                .then(function(response) {
+                    console.log('Email envoyé avec succès!', response.status, response.text);
+                }, function(error) {
+                    console.log('Erreur lors de l\'envoi de l\'email:', error);
+                });
+        }
+
+        // Partager sur Twitter
+        function shareOnTwitter() {
+            const text = encodeURIComponent('Just entered the @JERCAT MEGA airdrop! 2M JERCAT for 100 winners! 🐱💎 Better odds! #JERCAT #Airdrop');
+            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+        }
+
+        // Toggle Admin Panel
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.toggle('hidden');
+            
+            if (!panel.classList.contains('hidden')) {
+                updateAdminTable();
+            }
+        }
+
+        // Update Admin Table
+        function updateAdminTable() {
+            const tbody = document.getElementById('adminParticipantsTable');
+            tbody.innerHTML = '';
+
+            if (participants.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">
+                            Aucun participant enregistré
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            participants.forEach((p, index) => {
+                const row = document.createElement('tr');
+                const date = new Date(p.registeredAt).toLocaleDateString();
+                const statusBadge = p.isWinner ? 
+                    '<span class="badge-admin badge-winner">🏆 Winner</span>' :
+                    (p.verified ? 
+                        '<span class="badge-admin badge-verified">✓ Verified</span>' : 
+                        '<span class="badge-admin badge-pending">⏳ Pending</span>');
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><code>${p.wallet.slice(0, 10)}...${p.wallet.slice(-8)}</code></td>
+                    <td>${p.email}</td>
+                    <td>${p.purchaseAmount.toFixed(2)} USDT</td>
+                    <td>${date}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Vérifier tous les participants
+        async function verifyAllParticipants() {
+            const minPurchase = parseFloat(document.getElementById('adminMinPurchase').value);
+            
+            document.getElementById('verificationProgress').classList.remove('hidden');
+            
+            for (let i = 0; i < participants.length; i++) {
+                const percent = Math.floor(((i + 1) / participants.length) * 100);
+                document.getElementById('progressBar').style.width = percent + '%';
+                document.getElementById('progressBar').textContent = percent + '%';
+                document.getElementById('progressText').textContent = `Vérification ${i + 1}/${participants.length}...`;
+
+                // Vérifier si le montant est suffisant
+                if (participants[i].purchaseAmount >= minPurchase) {
+                    participants[i].verified = true;
+                } else {
+                    participants[i].verified = false;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            localStorage.setItem('jercatParticipants', JSON.stringify(participants));
+            
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressBar').textContent = '100%';
+            document.getElementById('progressText').textContent = 'Vérification terminée!';
+
+            setTimeout(() => {
+                document.getElementById('verificationProgress').classList.add('hidden');
+                updateAdminTable();
+                updateParticipantsCount();
+            }, 1500);
+        }
+
+        // Sélectionner les gagnants
+        function selectWinners() {
+            const verifiedParticipants = participants.filter(p => p.verified);
+            
+            if (verifiedParticipants.length < 100) {
+                alert(`Pas assez de participants vérifiés (${verifiedParticipants.length}/100)`);
+                return;
+            }
+
+            if (!confirm('Êtes-vous sûr de vouloir sélectionner 100 gagnants aléatoires ?')) {
+                return;
+            }
+
+            // Mélanger aléatoirement
+            const shuffled = [...verifiedParticipants].sort(() => Math.random() - 0.5);
+            
+            winners = [];
+
+            // Top 10: 50,000 JERCAT each
+            for (let i = 0; i < 10 && i < shuffled.length; i++) {
+                winners.push({
+                    ...shuffled[i],
+                    tier: 1,
+                    tierName: '🥇 Top 10',
+                    prize: 50000,
+                    position: i + 1
+                });
+                shuffled[i].isWinner = true;
+            }
+
+            // Next 20: 30,000 JERCAT each
+            for (let i = 10; i < 30 && i < shuffled.length; i++) {
+                winners.push({
+                    ...shuffled[i],
+                    tier: 2,
+                    tierName: '🥈 Top 20',
+                    prize: 30000,
+                    position: i + 1
+                });
+                shuffled[i].isWinner = true;
+            }
+
+            // Next 70: 10,000 JERCAT each
+            for (let i = 30; i < 100 && i < shuffled.length; i++) {
+                winners.push({
+                    ...shuffled[i],
+                    tier: 3,
+                    tierName: '🥉 Top 70',
+                    prize: 10000,
+                    position: i + 1
+                });
+                shuffled[i].isWinner = true;
+            }
+
+            localStorage.setItem('jercatWinners', JSON.stringify(winners));
+            localStorage.setItem('jercatParticipants', JSON.stringify(participants));
+
+            displayWinners();
+            updateAdminTable();
+            updateParticipantsCount();
+        }
+
+        // Afficher les gagnants
+        function displayWinners() {
+            document.getElementById('winnersSection').classList.remove('hidden');
+            const winnersList = document.getElementById('winnersList');
+            winnersList.innerHTML = '';
+
+            winners.forEach(winner => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 1rem; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;';
+                
+                const tierColors = {
+                    1: '#fbbf24',
+                    2: '#a3a3a3',
+                    3: '#cd7f32'
+                };
+
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600; color: ${tierColors[winner.tier]};">
+                            #${winner.position} - ${winner.tierName}
+                        </div>
+                        <code style="font-size: 0.875rem;">${winner.wallet}</code>
+                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">
+                            ${winner.email}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">
+                            ${winner.prize.toLocaleString()}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">JERCAT</div>
+                    </div>
+                `;
+                winnersList.appendChild(div);
+            });
+        }
+
+        // Envoyer les emails aux gagnants
+        function sendWinnersEmails() {
+            if (winners.length === 0) {
+                alert('Aucun gagnant sélectionné!');
+                return;
+            }
+
+            if (!confirm(`Envoyer des emails à ${winners.length} gagnants ?`)) {
+                return;
+            }
+
+            let sent = 0;
+            winners.forEach((winner, index) => {
+                setTimeout(() => {
+                    const templateParams = {
+                        to_email: winner.email,
+                        to_name: winner.twitter,
+                        wallet_address: winner.wallet,
+                        position: winner.position,
+                        tier: winner.tierName,
+                        prize_amount: winner.prize.toLocaleString(),
+                        purchase_amount: winner.purchaseAmount.toFixed(2)
+                    };
+
+                    emailjs.send('YOUR_SERVICE_ID', 'YOUR_WINNER_TEMPLATE_ID', templateParams)
+                        .then(function(response) {
+                            sent++;
+                            console.log(`Email envoyé à ${winner.email} (${sent}/${winners.length})`);
+                            
+                            if (sent === winners.length) {
+                                alert('Tous les emails ont été envoyés avec succès!');
+                            }
+                        }, function(error) {
+                            console.log(`Erreur pour ${winner.email}:`, error);
+                        });
+                }, index * 1000); // Délai de 1 seconde entre chaque email
+            });
+        }
+
+        // Load winners if they exist
+        if (winners.length > 0) {
+            displayWinners();
+        }
+    </script>
+</body>
+</html>
