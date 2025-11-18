@@ -818,11 +818,18 @@
                     </div>
 
                     <div style="margin-bottom: 1rem;">
+                        <a href="https://dex-jercat-ouy6.vercel.app/" 
+                           target="_blank" 
+                           class="btn"
+                           style="display: block; text-decoration: none; margin-bottom: 1rem; background: linear-gradient(to right, #7c3aed, #2563eb); color: white;">
+                            🚀 Buy JERCAT on Our DEX (Gasless)
+                        </a>
+
                         <a href="https://pancakeswap.finance/swap?outputCurrency=0x197CF8951d93325A9333857Ee5330daF7aC4bcCF" 
                            target="_blank" 
                            class="btn btn-pink" 
                            style="display: block; text-decoration: none; margin-bottom: 1rem;">
-                            Buy JERCAT on PancakeSwap →
+                            Buy on PancakeSwap →
                         </a>
                         
                         <button class="btn btn-secondary" onclick="verifyPurchase()">
@@ -988,6 +995,29 @@
             <div class="contract-info">
                 <p class="contract-label">JERCAT Contract Address (BSC)</p>
                 <code class="contract-address">0x197CF8951d93325A9333857Ee5330daF7aC4bcCF</code>
+                
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <p style="color: #e9d5ff; font-size: 0.875rem; margin-bottom: 0.75rem;">
+                        Need to buy JERCAT tokens?
+                    </p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="https://dex-jercat-ouy6.vercel.app/" 
+                           target="_blank"
+                           style="color: #fbbf24; text-decoration: none; font-weight: bold; font-size: 0.875rem; 
+                                  background: rgba(251, 191, 36, 0.1); padding: 0.5rem 1rem; border-radius: 0.5rem; 
+                                  border: 1px solid rgba(251, 191, 36, 0.3); transition: all 0.2s;">
+                            🔗 JERCAT DEX (Gasless)
+                        </a>
+                        <a href="https://pancakeswap.finance/swap?outputCurrency=0x197CF8951d93325A9333857Ee5330daF7aC4bcCF" 
+                           target="_blank"
+                           style="color: #d8b4fe; text-decoration: none; font-weight: bold; font-size: 0.875rem; 
+                                  background: rgba(216, 180, 254, 0.1); padding: 0.5rem 1rem; border-radius: 0.5rem; 
+                                  border: 1px solid rgba(216, 180, 254, 0.3); transition: all 0.2s;">
+                            🥞 PancakeSwap
+                        </a>
+                    </div>
+                </div>
+                
                 <p class="contract-date">⏰ Draw Date: December 18, 2025 | 🎁 100 Lucky Winners</p>
             </div>
         </div>
@@ -997,7 +1027,7 @@
     <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
     <script>
         // Configuration EmailJS
-        emailjs.init("YOUR_EMAILJS_USER_ID"); // À remplacer par votre User ID EmailJS
+        emailjs.init("YOUR_EMAILJS_USER_ID");
 
         // Variables globales
         const CONTRACT_ADDRESS = '0x197CF8951d93325A9333857Ee5330daF7aC4bcCF';
@@ -1009,11 +1039,9 @@
         let currentStep = 1;
         let purchaseAmount = 0;
         
-        // Base de données locale (localStorage)
         let participants = JSON.parse(localStorage.getItem('jercatParticipants')) || [];
         let winners = JSON.parse(localStorage.getItem('jercatWinners')) || [];
 
-        // Timer countdown
         let timeLeft = {
             days: 30,
             hours: 0,
@@ -1046,7 +1074,6 @@
 
         setInterval(updateTimer, 1000);
 
-        // Update participants count
         function updateParticipantsCount() {
             document.getElementById('participants').textContent = participants.length;
             document.getElementById('adminTotalParticipants').textContent = participants.length;
@@ -1058,7 +1085,6 @@
 
         updateParticipantsCount();
 
-        // Fonctions utilitaires
         function showError(message) {
             document.getElementById('errorMessage').textContent = message;
             document.getElementById('errorAlert').classList.remove('hidden');
@@ -1102,7 +1128,6 @@
             document.getElementById(`step${step}`).classList.remove('hidden');
         }
 
-        // Connexion Wallet
         async function connectWallet() {
             if (typeof window.ethereum !== 'undefined') {
                 try {
@@ -1147,7 +1172,6 @@
             }
         }
 
-        // Vérifier l'achat via Web3
         async function verifyPurchase() {
             if (!account) return;
             
@@ -1169,8 +1193,7 @@
                 const balance = await tokenContract.methods.balanceOf(account).call();
                 const balanceInTokens = parseFloat(web3.utils.fromWei(balance, 'ether'));
 
-                // Estimation approximative (à ajuster selon le prix réel)
-                const estimatedUSDT = balanceInTokens * 0.001; // Exemple: 1 JERCAT = 0.001 USDT
+                const estimatedUSDT = balanceInTokens * 0.001;
                 
                 purchaseAmount = estimatedUSDT;
 
@@ -1191,7 +1214,6 @@
             }
         }
 
-        // Inscription finale
         function registerForAirdrop() {
             const email = document.getElementById('emailAddress').value;
             const twitter = document.getElementById('twitterHandle').value;
@@ -1212,7 +1234,6 @@
                 return;
             }
 
-            // Vérifier si le wallet est déjà enregistré
             const existingParticipant = participants.find(p => p.wallet.toLowerCase() === account.toLowerCase());
             if (existingParticipant) {
                 showError('Ce wallet est déjà enregistré pour l\'airdrop.');
@@ -1246,11 +1267,9 @@
             updateParticipantsCount();
             updateSteps(4);
 
-            // Envoyer email de confirmation
             sendConfirmationEmail(participant);
         }
 
-        // Envoyer email de confirmation
         function sendConfirmationEmail(participant) {
             const templateParams = {
                 to_email: participant.email,
@@ -1269,13 +1288,11 @@
                 });
         }
 
-        // Partager sur Twitter
         function shareOnTwitter() {
             const text = encodeURIComponent('Just entered the @JERCAT MEGA airdrop! 2M JERCAT for 100 winners! 🐱💎 Better odds! #JERCAT #Airdrop');
             window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
         }
 
-        // Toggle Admin Panel
         function toggleAdminPanel() {
             const panel = document.getElementById('adminPanel');
             panel.classList.toggle('hidden');
@@ -1285,7 +1302,6 @@
             }
         }
 
-        // Update Admin Table
         function updateAdminTable() {
             const tbody = document.getElementById('adminParticipantsTable');
             tbody.innerHTML = '';
@@ -1322,7 +1338,6 @@
             });
         }
 
-        // Vérifier tous les participants
         async function verifyAllParticipants() {
             const minPurchase = parseFloat(document.getElementById('adminMinPurchase').value);
             
@@ -1334,7 +1349,6 @@
                 document.getElementById('progressBar').textContent = percent + '%';
                 document.getElementById('progressText').textContent = `Vérification ${i + 1}/${participants.length}...`;
 
-                // Vérifier si le montant est suffisant
                 if (participants[i].purchaseAmount >= minPurchase) {
                     participants[i].verified = true;
                 } else {
@@ -1357,7 +1371,6 @@
             }, 1500);
         }
 
-        // Sélectionner les gagnants
         function selectWinners() {
             const verifiedParticipants = participants.filter(p => p.verified);
             
@@ -1370,12 +1383,10 @@
                 return;
             }
 
-            // Mélanger aléatoirement
             const shuffled = [...verifiedParticipants].sort(() => Math.random() - 0.5);
             
             winners = [];
 
-            // Top 10: 50,000 JERCAT each
             for (let i = 0; i < 10 && i < shuffled.length; i++) {
                 winners.push({
                     ...shuffled[i],
@@ -1387,7 +1398,6 @@
                 shuffled[i].isWinner = true;
             }
 
-            // Next 20: 30,000 JERCAT each
             for (let i = 10; i < 30 && i < shuffled.length; i++) {
                 winners.push({
                     ...shuffled[i],
@@ -1399,7 +1409,6 @@
                 shuffled[i].isWinner = true;
             }
 
-            // Next 70: 10,000 JERCAT each
             for (let i = 30; i < 100 && i < shuffled.length; i++) {
                 winners.push({
                     ...shuffled[i],
@@ -1419,7 +1428,6 @@
             updateParticipantsCount();
         }
 
-        // Afficher les gagnants
         function displayWinners() {
             document.getElementById('winnersSection').classList.remove('hidden');
             const winnersList = document.getElementById('winnersList');
@@ -1456,7 +1464,6 @@
             });
         }
 
-        // Envoyer les emails aux gagnants
         function sendWinnersEmails() {
             if (winners.length === 0) {
                 alert('Aucun gagnant sélectionné!');
@@ -1491,11 +1498,10 @@
                         }, function(error) {
                             console.log(`Erreur pour ${winner.email}:`, error);
                         });
-                }, index * 1000); // Délai de 1 seconde entre chaque email
+                }, index * 1000);
             });
         }
 
-        // Load winners if they exist
         if (winners.length > 0) {
             displayWinners();
         }
