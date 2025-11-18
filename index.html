@@ -1,0 +1,463 @@
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, Check, Wallet, Gift, TrendingUp, Users, Timer } from 'lucide-react';
+
+export default function JercatAirdrop() {
+  const [account, setAccount] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [twitterHandle, setTwitterHandle] = useState('');
+  const [telegramHandle, setTelegramHandle] = useState('');
+  const [purchaseAmount, setPurchaseAmount] = useState(0);
+  const [participants, setParticipants] = useState(247);
+  const [timeLeft, setTimeLeft] = useState({ days: 30, hours: 0, minutes: 0, seconds: 0 });
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const CONTRACT_ADDRESS = '0x197CF8951d93325A9333857Ee5330daF7aC4bcCF';
+  const MIN_PURCHASE = 9; // 9 USDT minimum
+
+  // Simulation du timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        if (prev.days > 0) return { days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Connexion Wallet
+  const connectWallet = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        
+        // Vérifier BSC (chainId 56)
+        if (chainId !== '0x38') {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x38' }],
+            });
+          } catch (switchError) {
+            if (switchError.code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0x38',
+                  chainName: 'Binance Smart Chain',
+                  nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                  rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                  blockExplorerUrls: ['https://bscscan.com/']
+                }]
+              });
+            }
+          }
+        }
+        
+        setAccount(accounts[0]);
+        setIsConnected(true);
+        setCurrentStep(2);
+      } catch (error) {
+        setErrorMsg('Erreur de connexion au wallet');
+      }
+    } else {
+      setErrorMsg('MetaMask non détecté. Veuillez installer MetaMask.');
+    }
+  };
+
+  // Vérifier l'achat
+  const verifyPurchase = async () => {
+    if (!account) return;
+    
+    setErrorMsg('');
+    
+    // Simulation de vérification (dans la vraie app, on vérifierait via Web3)
+    setTimeout(() => {
+      const amount = Math.random() * 20 + 5; // Simule un montant entre 5 et 25 USDT
+      setPurchaseAmount(amount);
+      
+      if (amount >= MIN_PURCHASE) {
+        setHasPurchased(true);
+        setCurrentStep(3);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      } else {
+        setErrorMsg(`Vous devez acheter au moins ${MIN_PURCHASE} USDT de JERCAT pour participer.`);
+      }
+    }, 2000);
+  };
+
+  // Inscription finale
+  const registerForAirdrop = () => {
+    if (!twitterHandle || !telegramHandle) {
+      setErrorMsg('Veuillez remplir tous les champs.');
+      return;
+    }
+    
+    if (!twitterHandle.startsWith('@')) {
+      setErrorMsg('Le Twitter handle doit commencer par @');
+      return;
+    }
+    
+    setErrorMsg('');
+    setIsRegistered(true);
+    setParticipants(prev => prev + 1);
+    setCurrentStep(4);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">🐱</div>
+          <h1 className="text-5xl font-bold text-white mb-2">JERCAT MEGA AIRDROP</h1>
+          <p className="text-xl text-purple-200">Buy 9 USDT & Get a Chance to Win</p>
+          <div className="inline-block bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-bold text-sm mt-3">
+            🔥 100 WINNERS - Better Odds!
+          </div>
+        </div>
+
+        {/* Timer */}
+        <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl p-6 mb-8 text-center shadow-2xl">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Timer className="text-white" size={24} />
+            <h2 className="text-2xl font-bold text-white">Airdrop Ends In</h2>
+          </div>
+          <div className="flex justify-center gap-4">
+            {[
+              { label: 'Days', value: timeLeft.days },
+              { label: 'Hours', value: timeLeft.hours },
+              { label: 'Minutes', value: timeLeft.minutes },
+              { label: 'Seconds', value: timeLeft.seconds }
+            ].map((item, idx) => (
+              <div key={idx} className="bg-white/20 backdrop-blur rounded-xl p-3 min-w-[70px]">
+                <div className="text-3xl font-bold text-white">{String(item.value).padStart(2, '0')}</div>
+                <div className="text-xs text-white/80">{item.label}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-white/90 text-sm mt-3">Draw on December 18, 2025</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
+            <Gift className="mx-auto text-yellow-400 mb-2" size={32} />
+            <div className="text-2xl font-bold text-white">2M JERCAT</div>
+            <div className="text-sm text-purple-200">Total Prize Pool</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
+            <Users className="mx-auto text-green-400 mb-2" size={32} />
+            <div className="text-2xl font-bold text-white">{participants}</div>
+            <div className="text-sm text-purple-200">Participants</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
+            <TrendingUp className="mx-auto text-blue-400 mb-2" size={32} />
+            <div className="text-2xl font-bold text-white">100</div>
+            <div className="text-sm text-purple-200">Winners</div>
+          </div>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+          {/* Progress Steps */}
+          <div className="flex justify-between mb-8">
+            {[
+              { num: 1, label: 'Connect' },
+              { num: 2, label: 'Purchase' },
+              { num: 3, label: 'Register' },
+              { num: 4, label: 'Done' }
+            ].map((step, idx) => (
+              <div key={idx} className="flex flex-col items-center flex-1">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold mb-2 ${
+                  currentStep > step.num ? 'bg-green-500 text-white' :
+                  currentStep === step.num ? 'bg-purple-600 text-white' :
+                  'bg-gray-200 text-gray-500'
+                }`}>
+                  {currentStep > step.num ? <Check size={20} /> : step.num}
+                </div>
+                <div className={`text-xs font-semibold ${currentStep >= step.num ? 'text-purple-600' : 'text-gray-400'}`}>
+                  {step.label}
+                </div>
+                {idx < 3 && (
+                  <div className={`h-1 w-full absolute top-5 left-1/2 -z-10 ${
+                    currentStep > step.num ? 'bg-green-500' : 'bg-gray-200'
+                  }`} style={{ transform: 'translateX(50%)' }} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+              <p className="text-red-700 text-sm">{errorMsg}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {showSuccess && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+              <Check className="text-green-500 flex-shrink-0 mt-0.5" size={20} />
+              <p className="text-green-700 text-sm">Vérification réussie ! Vous pouvez continuer.</p>
+            </div>
+          )}
+
+          {/* STEP 1: Connect Wallet */}
+          {!isConnected && (
+            <div className="text-center py-8">
+              <Wallet className="mx-auto text-purple-600 mb-4" size={64} />
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Connect Your Wallet</h2>
+              <p className="text-gray-600 mb-6">Connect your MetaMask wallet to participate in the airdrop</p>
+              <button
+                onClick={connectWallet}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition"
+              >
+                Connect MetaMask
+              </button>
+              <p className="text-xs text-gray-500 mt-4">Make sure you're on Binance Smart Chain (BSC)</p>
+            </div>
+          )}
+
+          {/* STEP 2: Verify Purchase */}
+          {isConnected && !hasPurchased && (
+            <div className="py-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Purchase Requirement</h2>
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-6 mb-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="text-yellow-600 flex-shrink-0 mt-1" size={24} />
+                  <div>
+                    <h3 className="font-bold text-yellow-900 mb-2">Minimum Purchase Required</h3>
+                    <p className="text-yellow-800 mb-3">
+                      To participate in this airdrop, you must purchase at least <strong>9 USDT</strong> worth of JERCAT tokens.
+                    </p>
+                    <div className="bg-white/70 rounded-lg p-3 mb-3">
+                      <p className="text-sm text-gray-700">
+                        <strong>Connected Wallet:</strong><br />
+                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">{account.slice(0, 6)}...{account.slice(-4)}</code>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <a
+                  href={`https://pancakeswap.finance/swap?outputCurrency=${CONTRACT_ADDRESS}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-4 rounded-xl font-bold text-center hover:shadow-lg transform hover:scale-105 transition"
+                >
+                  Buy JERCAT on PancakeSwap →
+                </a>
+                
+                <button
+                  onClick={verifyPurchase}
+                  className="w-full bg-purple-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-purple-700 transition"
+                >
+                  Verify My Purchase
+                </button>
+              </div>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  After purchasing, click "Verify My Purchase" to check your eligibility
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Registration Form */}
+          {isConnected && hasPurchased && !isRegistered && (
+            <div className="py-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Complete Registration</h2>
+              
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Check className="text-green-600" size={20} />
+                  <span className="font-bold text-green-800">Purchase Verified!</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  You purchased <strong>{purchaseAmount.toFixed(2)} USDT</strong> worth of JERCAT ✅
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Twitter Handle *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="@YourTwitterHandle"
+                    value={twitterHandle}
+                    onChange={(e) => setTwitterHandle(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Telegram Username *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="@YourTelegramUsername"
+                    value={telegramHandle}
+                    onChange={(e) => setTelegramHandle(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <Gift size={18} />
+                    Bonus Tasks (Optional)
+                  </h3>
+                  <div className="space-y-2 text-sm text-blue-800">
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" className="rounded" />
+                      Follow @JERCAT on Twitter (+1 extra entry)
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" className="rounded" />
+                      Retweet our pinned post (+1 extra entry)
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" className="rounded" />
+                      Join Telegram group (+1 extra entry)
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  onClick={registerForAirdrop}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4 rounded-xl font-bold text-lg hover:shadow-lg transform hover:scale-105 transition"
+                >
+                  Complete Registration 🎉
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Success */}
+          {isRegistered && (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Check className="text-white" size={48} />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-3">Registration Complete! 🎉</h2>
+              <p className="text-lg text-gray-600 mb-6">
+                You're now officially entered into the JERCAT airdrop!
+              </p>
+              
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 mb-6 text-left max-w-md mx-auto">
+                <h3 className="font-bold text-gray-800 mb-3">Your Entry Details:</h3>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Wallet:</strong> {account.slice(0, 10)}...{account.slice(-8)}</p>
+                  <p><strong>Twitter:</strong> {twitterHandle}</p>
+                  <p><strong>Telegram:</strong> {telegramHandle}</p>
+                  <p><strong>Purchase Amount:</strong> {purchaseAmount.toFixed(2)} USDT</p>
+                  <p><strong>Entry Number:</strong> #{participants}</p>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-6 max-w-md mx-auto">
+                <p className="text-sm text-yellow-800">
+                  <strong>What's Next?</strong><br />
+                  The draw will take place on <strong>December 18, 2025</strong> (in {timeLeft.days} days). 
+                  100 lucky winners will be selected randomly and contacted via Twitter DM!
+                </p>
+              </div>
+
+              <button
+                onClick={() => window.open(`https://twitter.com/intent/tweet?text=Just entered the @JERCAT MEGA airdrop! 2M JERCAT for 100 winners! 🐱💎 Better odds! %23JERCAT %23Airdrop`, '_blank')}
+                className="bg-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600 transition"
+              >
+                Share on Twitter 🐦
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Info Cards */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-3">📋 How to Participate</h3>
+            <ol className="space-y-2 text-purple-100 text-sm">
+              <li>1. Connect your BSC wallet</li>
+              <li>2. Purchase minimum 9 USDT of JERCAT</li>
+              <li>3. Complete registration form</li>
+              <li>4. Wait 30 days for the draw!</li>
+            </ol>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-3">🏆 Prize Distribution</h3>
+            <div className="space-y-2 text-purple-100 text-sm">
+              <div className="flex justify-between">
+                <span>🥇 Top 10 Winners:</span>
+                <span className="font-bold">50,000 JERCAT each</span>
+              </div>
+              <div className="flex justify-between">
+                <span>🥈 Next 20 Winners:</span>
+                <span className="font-bold">30,000 JERCAT each</span>
+              </div>
+              <div className="flex justify-between">
+                <span>🥉 Next 70 Winners:</span>
+                <span className="font-bold">10,000 JERCAT each</span>
+              </div>
+              <div className="border-t border-white/20 pt-2 mt-2 flex justify-between font-bold">
+                <span>Total Pool:</span>
+                <span className="text-yellow-300">2,000,000 JERCAT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Why Better Odds */}
+        <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur rounded-2xl p-6 mb-6 border border-green-400/30">
+          <h3 className="text-2xl font-bold text-white mb-3 text-center">✨ Why This Airdrop is Better</h3>
+          <div className="grid md:grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-4xl font-bold text-green-300">100</div>
+              <div className="text-sm text-white">Winners Selected</div>
+              <div className="text-xs text-green-200 mt-1">More chances to win!</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-green-300">30</div>
+              <div className="text-sm text-white">Days to Enter</div>
+              <div className="text-xs text-green-200 mt-1">No rush, take your time!</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-green-300">9 USDT</div>
+              <div className="text-sm text-white">Minimum Buy</div>
+              <div className="text-xs text-green-200 mt-1">Low entry barrier!</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contract Info */}
+        <div className="bg-white/5 backdrop-blur rounded-xl p-4 text-center">
+          <p className="text-purple-200 text-xs mb-2">JERCAT Contract Address (BSC)</p>
+          <code className="text-white text-xs bg-black/30 px-3 py-2 rounded break-all">
+            {CONTRACT_ADDRESS}
+          </code>
+          <p className="text-purple-300 text-xs mt-3">
+            ⏰ Draw Date: December 18, 2025 | 🎁 100 Lucky Winners
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
